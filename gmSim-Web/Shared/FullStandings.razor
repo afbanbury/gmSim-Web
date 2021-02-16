@@ -1,5 +1,62 @@
-<h3>FullStandings</h3>
+@using Microsoft.VisualBasic
+@using System.Runtime.InteropServices
+@inject HttpClient Http
+
+@if (_record == null)
+{
+    <em>Loading...</em>
+}
+else
+{
+    <td><TeamName TeamId="@_record.TeamId"/></td>
+    <td style="text-align:center">@_record.OverallWins</td>
+    <td style="text-align:center">@_record.OverallLosses</td>
+    <td style="text-align:center">@_record.OverallTies</td>
+    <td style="text-align:center">@_record.OverallPct.ToString("F3")</td>
+    <td style="text-align:center">@_record.OverallPointsFor</td>
+    <td style="text-align:center">@_record.OverallPointsAgainst</td>
+    <td style="text-align:center">@NetPoints()</td>
+    <td style="text-align:center">@_record.HomeWins-@_record.HomeLosses-@_record.HomeTies</td>
+    <td style="text-align:center">@_record.AwayWins-@_record.AwayLosses-@_record.AwayTies</td>
+    <td style="text-align:center">@_record.DivisionWins-@_record.DivisionLosses-@_record.DivisionTies</td>
+    <td style="text-align:center">@_record.DivisionPct.ToString("F3")</td>
+    <td style="text-align:center">@_record.ConferenceWins-@_record.ConferenceLosses-@_record.ConferenceTies</td>
+    <td style="text-align:center">@_record.ConferencePct.ToString("F3")</td>
+    <td style="text-align:center">@NonConferenceResults()</td>
+    <td style="text-align:center">@_record.StreakLength@_record.CurrentStreak</td>
+    <td style="text-align:center">@LastFive()</td>
+}
 
 @code {
+    [Parameter] 
+    public string RecordId { get; set; }
+    private StandingsDocument _record;
     
+    protected override async Task OnInitializedAsync()
+    {
+        _record = await Http.GetFromJsonAsync<StandingsDocument>("https://localhost:5001/api/standings/"+ RecordId);
+    }
+
+    private int NetPoints()
+    {
+        return _record.OverallPointsFor - _record.OverallPointsAgainst;
+    }
+
+    private string NonConferenceResults()
+    {
+        var wins = _record.OverallWins - _record.DivisionWins - _record.ConferenceWins;
+        var losses = _record.OverallLosses - _record.DivisionLosses - _record.ConferenceLosses;
+        var ties = _record.OverallTies - _record.DivisionTies - _record.ConferenceTies;
+
+        return wins + "-" + losses + "-" + ties;
+    }
+    
+    private string LastFive()
+    {
+        var wins = _record.LastFive.Count(c => c == 'W');
+        var losses = _record.LastFive.Count(c => c == 'L');
+        var ties = _record.LastFive.Count(c => c == 'T');
+
+        return wins + "-" + losses + "-" + ties;
+    }
 }

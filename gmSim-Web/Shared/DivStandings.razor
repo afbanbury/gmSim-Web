@@ -1,10 +1,58 @@
-<h3>DivisionStandings</h3>
+@inject HttpClient Http
+
+@if (_standings == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Team</th>
+            <th style="text-align:center">W</th>
+            <th style="text-align:center">L</th>
+            <th style="text-align:center">T</th>
+            <th style="text-align:center">PCT</th>
+            <th style="text-align:center">PF</th>
+            <th style="text-align:center">PA</th>
+            <th style="text-align:center">Net Pts</th>
+            <th style="text-align:center">Home</th>
+            <th style="text-align:center">Road</th>
+            <th style="text-align:center">Div</th>
+            <th style="text-align:center">Div Pct</th>
+            <th style="text-align:center">Conf</th>
+            <th style="text-align:center">Conf Pct</th>
+            <th style="text-align:center">Non-Conf</th>
+            <th style="text-align:center">Streak</th>
+            <th style="text-align:center">Last Five</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var standing in _standings)
+        {
+            <tr>
+                <FullStandings RecordId="@standing.Id"/>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
 
 @code {
+    private StandingsDocument[] _standings;
+    
     [Parameter]
     public string Conference { get; set; }
     [Parameter]
     public string Division { get; set; }
     [Parameter]
     public int Season { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _standings = await Http.GetFromJsonAsync<StandingsDocument[]>("https://localhost:5001/api/standings/"+Conference+"/"+Division+"/"+Season);
+    }
 }

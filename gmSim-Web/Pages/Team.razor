@@ -1,6 +1,37 @@
-@page "/Team"
-<h3>Team</h3>
+@page "/Team/{TeamId}"
+@inject HttpClient Http
 
+
+
+@if (_team == null && _game == null && _fixtures == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <h1>@_team.Name</h1>
+   
+    <h3>Current Standings</h3>
+    <DivStandings Conference="@_team.Conference" Division="@_team.Division" Season="@_game.Season"/>
+                                                                                                  
+    <h3>Fixtures</h3>  
+    <FixturesForWeek  Fixtures ="@_fixtures.ToList()"/>
+}
 @code {
+    [Parameter] 
+    public string TeamId { get; set; }
+    
+    private GameDocument _game;
+    private TeamsDocument _team;
+    private FixturesDocument[] _fixtures;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
+        _team = await Http.GetFromJsonAsync<TeamsDocument>("https://localhost:5001/api/teams/" + TeamId);
+        _fixtures = await Http.GetFromJsonAsync<FixturesDocument[]>("https://localhost:5001/api/fixtures/GetTeamFixturesForSeason/" + TeamId + "/" + _game.Season);
+    }
     
 }

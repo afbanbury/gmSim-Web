@@ -1,5 +1,27 @@
-<h3>$COMPONENTNAME$</h3>
+@inject HttpClient Http
+
+@if (_team == null)
+{
+    <em>Loading...</em>
+}
+else
+{
+    <span><a href="@TeamLink()">@_team.Name</a></span>
+}
 
 @code {
-  $END$
+    [Parameter] 
+    public string TeamId { get; set; }
+        
+    private TeamsDocument _team;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _team = await Http.GetFromJsonAsync<TeamsDocument>("https://localhost:5001/api/teams/"+ TeamId);
+    }
+    
+    private string TeamLink()
+    {
+        return "https://localhost:5003/team/" + TeamId;
+    }
 }

@@ -1,5 +1,43 @@
-<h3>$COMPONENTNAME$</h3>
+@inject HttpClient Http
 
+@if (Fixtures == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+        <th><div style='width: 170px;'>Type</Div></th>
+            <th>Fixture</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var fixture in Fixtures)
+        {
+            var homeTeam = @fixture.HomeTeamId;
+            var awayTeam = @fixture.AwayTeamId;
+
+            <tr>
+                <td><div style='width: 170px;'>@fixture.Type</div></td>
+                @if (fixture.Played)
+                {
+                    <td><TeamName TeamId="@awayTeam"/> @fixture.AwayScore at <TeamName TeamId="@homeTeam"/> @fixture.HomeScore</td>
+                }
+                else
+                {
+                    <td><TeamName TeamId="@awayTeam"/> at <TeamName TeamId="@homeTeam"/></td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+    
+}
 @code {
-  $END$
+    [Parameter]
+    public List<FixturesDocument> Fixtures { get; set; }
 }

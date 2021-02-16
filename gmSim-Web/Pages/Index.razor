@@ -1,7 +1,80 @@
 ﻿@page "/"
+@inject HttpClient Http
 
-<h1>Hello, world!</h1>
+<h1>General Manager</h1>
 
-Welcome to your new app.
+@if (_game == null || _lastWeekFixtures == null || _nextWeekFixtures == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Season</th>
+            <th>Week</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>@_game.Season</td>
+            <td>@_game.Week</td>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+        </tr>
+        </tbody>
+    </table>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm">
+
+                <h2>Week @(_game.Week - 1) Results</h2>
+                <FixturesForWeek Fixtures="@_lastWeekFixtures.ToList()"/>
+            </div>
+            <div class="col-sm">
+                <h2>Week @(_game.Week) Fixtures</h2>
+                <FixturesForWeek  Fixtures ="@_nextWeekFixtures.ToList()"/>
+            </div>
+        </div>
+    </div>
+    
+    
+    <p><button class="btn btn-primary" @onclick="PlayWeek">Play Week</button></p>
+    <p><button class="btn btn-primary" @onclick="NewSeason">New Season</button></p>
+    
+}
+@code {
+    private GameDocument _game;
+    private FixturesDocument[] _lastWeekFixtures;
+    private FixturesDocument[] _nextWeekFixtures;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
+        await UpdateFixtures();
+    }
+    
+    private async Task NewSeason()
+    {
+        var result = await Http.PutAsJsonAsync<GameDocument>("https://localhost:5001/api/game/newSeason/", null);
+        _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
+        await UpdateFixtures();
+    }
+    
+    private async Task PlayWeek()
+    {
+        var result = await Http.PutAsJsonAsync<GameDocument>("https://localhost:5001/api/game/playWeek/", null);
+        _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
+        await UpdateFixtures();
+    }
+    
+    private async Task UpdateFixtures()
+    {
+        _lastWeekFixtures = await Http.GetFromJsonAsync<FixturesDocument[]>("https://localhost:5001/api/fixtures/ForWeek/" + _game.Season + "/" + (_game.Week - 1));
+        _nextWeekFixtures = await Http.GetFromJsonAsync<FixturesDocument[]>("https://localhost:5001/api/fixtures/ForWeek/" + _game.Season + "/" + _game.Week);
+    }
+    
+}
+

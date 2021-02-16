@@ -1,6 +1,57 @@
 @page "/Fixtures"
-<h3>Fixtures</h3>
+@inject HttpClient Http
 
-@code {
+@if (_game == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <h1>Season: @ShowSeason</h1>
+    <h2>Week: @ShowWeek</h2>
+
+    <p>
+        @for (int i = 1; i <= 20; i++)
+        {
+            var week = i;
+            if (week == @ShowWeek)
+            {
+                <button class="btn btn-primary" @onclick="@(e=>ButtonUpdateWeek(week))">@week</button>
+            }
+            else
+            {
+                <button @onclick="@(e=>ButtonUpdateWeek(week))">@week</button>
+            }
+        }
+        
+    </p>
     
+    <FixturesForWeek  Fixtures ="@_weeklyFixtures"/>
+}
+@code {
+    private GameDocument _game;
+    private FixturesDocument[] _allFixtures;
+    private List<FixturesDocument> _weeklyFixtures;
+
+    private int ShowSeason;
+    private int ShowWeek { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
+        ShowSeason = _game.Season;
+        ShowWeek = _game.Week;
+        _allFixtures = await Http.GetFromJsonAsync<FixturesDocument[]>("https://localhost:5001/api/fixtures/ForSeason/" + ShowSeason);
+        ButtonUpdateWeek(ShowWeek);
+    }
+    
+    //private async Task ButtonUpdateWeek(int week)
+    private void ButtonUpdateWeek(int week)
+    {
+        ShowWeek = week;
+        //await _weeklyFixtures.UpdateFixtures(ShowWeek);
+        _weeklyFixtures = _allFixtures.Where(f => f.Week.Equals(ShowWeek)).ToList();
+    }
 }
