@@ -1,8 +1,6 @@
 ﻿@page "/"
 @inject HttpClient Http
 
-<h1>General Manager</h1>
-
 @if (_game == null || _lastWeekFixtures == null || _nextWeekFixtures == null)
 {
     <p>
@@ -11,39 +9,24 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Season</th>
-            <th>Week</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>@_game.Season</td>
-            <td>@_game.Week</td>
+    <h1>Season @_game.Season</h1>
 
-        </tr>
-        </tbody>
-    </table>
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm">
 
-                <h2>Week @(_game.Week - 1) Results</h2>
+                <h3>Week @(_game.Week - 1) Results</h3>
                 <FixturesForWeek Fixtures="@_lastWeekFixtures.ToList()"/>
             </div>
             <div class="col-sm">
-                <h2>Week @(_game.Week) Fixtures</h2>
+                <h3>Week @(_game.Week) Fixtures</h3>
                 <FixturesForWeek  Fixtures ="@_nextWeekFixtures.ToList()"/>
             </div>
         </div>
     </div>
     
-    
-    <p><button class="btn btn-primary" @onclick="PlayWeek">Play Week</button></p>
-    <p><button class="btn btn-primary" @onclick="NewSeason">New Season</button></p>
-    
+    <p><button class="btn btn-primary" @onclick="NextWeek">@ButtonString()</button></p>
+
 }
 @code {
     private GameDocument _game;
@@ -55,19 +38,29 @@ else
         _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
         await UpdateFixtures();
     }
-    
-    private async Task NewSeason()
+
+    private string ButtonString()
     {
-        var result = await Http.PutAsJsonAsync<GameDocument>("https://localhost:5001/api/game/newSeason/", null);
-        _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
-        await UpdateFixtures();
+        switch (_game.NextWeekType)
+        {
+            case WeekType.EndSeason:
+                return "Next season";
+            case WeekType.OffSeason:
+                return "Next off season week";
+            case WeekType.PostSeason:
+                return "Next Play-Off game";
+            case WeekType.RegularSeason:
+                return "Play regular season game";
+            default:
+                return "Error";
+        }
     }
     
-    private async Task PlayWeek()
+    private async Task NextWeek()
     {
-        var result = await Http.PutAsJsonAsync<GameDocument>("https://localhost:5001/api/game/playWeek/", null);
+        var result = await Http.PostAsync("https://localhost:5001/api/game/nextWeek", null);
         _game = await Http.GetFromJsonAsync<GameDocument>("https://localhost:5001/api/game");
-        await UpdateFixtures();
+        await UpdateFixtures();   
     }
     
     private async Task UpdateFixtures()
